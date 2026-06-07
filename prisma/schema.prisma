@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  name         String?
+  phone        String?
+  avatar       String?
+  role         String        @default("USER") // USER | ADMIN
+  bio          String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  pets         Pet[]
+  applications Application[]
+  favorites    Favorite[]
+}
+
+model Pet {
+  id          String   @id @default(cuid())
+  title       String
+  species     String   @default("DOG") // DOG | CAT | OTHER
+  breed       String?
+  age         String?
+  gender      String?
+  size        String?  // SMALL | MEDIUM | LARGE
+  color       String?
+  location    String
+  description String
+  photos      String   @default("[]") // JSON array of URLs
+  status      String   @default("AVAILABLE") // AVAILABLE | PENDING | ADOPTED
+  source      String   @default("USER_POSTED") // USER_POSTED | SCRAPED
+  sourceUrl   String?
+  isVerified  Boolean  @default(false)
+  viewCount   Int      @default(0)
+
+  contactName   String?
+  contactPhone  String?
+  contactWechat String?
+
+  userId       String?
+  user         User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  applications Application[]
+  favorites    Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([species, status])
+  @@index([location])
+  @@index([createdAt])
+  @@index([source, status])
+}
+
+model Application {
+  id      String @id @default(cuid())
+  message String
+  status  String @default("PENDING") // PENDING | APPROVED | REJECTED
+
+  petId String
+  pet   Pet    @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([petId, userId])
+}
+
+model Favorite {
+  id     String @id @default(cuid())
+  petId  String
+  pet    Pet    @relation(fields: [petId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([petId, userId])
+}
+
+model ScrapeLog {
+  id         String    @id @default(cuid())
+  source     String
+  status     String    // success | failed | partial
+  itemsFound Int       @default(0)
+  itemsNew   Int       @default(0)
+  error      String?
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+}
