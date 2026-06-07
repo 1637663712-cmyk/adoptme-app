@@ -1,10 +1,11 @@
 import Link from "next/link";
+import type { Pet } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { parsePhotos } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-async function getFeaturedPets() {
+async function getFeaturedPets(): Promise<Pet[]> {
   const pets = await prisma.pet.findMany({
     where: { status: "AVAILABLE" },
     orderBy: { createdAt: "desc" },
@@ -93,7 +94,7 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {pets.map((pet) => {
+              {pets.map((pet: Pet) => {
                 const photos = parsePhotos(pet.photos);
                 return (
                   <Link
